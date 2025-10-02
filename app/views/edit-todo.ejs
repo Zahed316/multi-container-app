@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Edit Task - Enhanced Todo App</title>
+    <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <% if (lang === 'fa') { %>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css">
+    <% } %>
+    <style>
+        .form-control:focus { border-color: #007bff; box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); }
+        .btn-cancel { margin-left: 10px; }
+    </style>
+</head>
+
+<body dir="<%= dir %>">
+    <div class="container m-5 p-2 rounded mx-auto bg-light shadow">
+        <div class="row m-1 p-0">
+            <div class="col-12 text-right">
+                <a class="btn btn-sm <%= lang==='en' ? 'btn-primary' : 'btn-outline-primary' %>" href="/todo/edit/<%= todo._id %>?lang=en">EN</a>
+                <a class="btn btn-sm <%= lang==='fa' ? 'btn-primary' : 'btn-outline-primary' %>" href="/todo/edit/<%= todo._id %>?lang=fa">FA</a>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="row m-1 p-4">
+            <div class="col">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="text-primary">
+                        <i class="fa fa-edit"></i> <%= t('editTask') %>
+                    </h3>
+                    <a href="/?lang=<%= lang %>" class="btn btn-outline-secondary">
+                        <i class="fa fa-arrow-left"></i> <%= t('backToTasks') %>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row m-1 p-3">
+            <div class="col col-11 mx-auto">
+                <!-- Edit Task Form -->
+                <form method="POST" action="/todo/update?lang=<%= lang %>" autocomplete="off" id="editTaskForm">
+                    <input type="hidden" name="_id" value="<%= todo._id %>">
+                    
+                    <div class="row bg-white rounded shadow-sm p-4">
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="task" class="font-weight-bold"><%= t('taskLabel') %> *</label>
+                                <input class="form-control form-control-lg" 
+                                       type="text" 
+                                       name="task" 
+                                       id="task"
+                                       value="<%= todo.task %>" 
+                                       placeholder="Enter task title" 
+                                       required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="description" class="font-weight-bold"><%= t('descriptionLabel') %></label>
+                                <textarea class="form-control" 
+                                          name="description" 
+                                          id="description"
+                                          rows="3" 
+                                          placeholder="Add a description (optional)"><%= todo.description || '' %></textarea>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="priority" class="font-weight-bold"><%= t('priority') %></label>
+                                        <select class="form-control" name="priority" id="priority">
+                                            <option value="low" <%= todo.priority === 'low' ? 'selected' : '' %>>Low Priority</option>
+                                            <option value="medium" <%= todo.priority === 'medium' ? 'selected' : '' %>>Medium Priority</option>
+                                            <option value="high" <%= todo.priority === 'high' ? 'selected' : '' %>>High Priority</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="category" class="font-weight-bold"><%= t('category') %></label>
+                                        <input class="form-control" 
+                                               type="text" 
+                                               name="category" 
+                                               id="category"
+                                               value="<%= todo.category || '' %>" 
+                                               placeholder="e.g., Work, Personal, Shopping">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="dueDate" class="font-weight-bold"><%= t('dueDate') %></label>
+                                        <div class="input-group">
+                                            <% if (lang !== 'fa') { %>
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text date-trigger" title="<%= t('dueDate') %>"><i class="fa fa-calendar"></i></span>
+                                                </div>
+                                            <% } %>
+                                            <input class="form-control" 
+                                                   type="<%= lang==='fa' ? 'text' : 'date' %>" 
+                                                   name="dueDate" 
+                                                   id="dueDate"
+                                                   value="<%= todo.dueDate ? moment(todo.dueDate).format('YYYY-MM-DD') : '' %>">
+                                            <% if (lang === 'fa') { %>
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text date-trigger" title="<%= t('dueDate') %>"><i class="fa fa-calendar"></i></span>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="tags" class="font-weight-bold"><%= t('tags') %></label>
+                                        <input class="form-control" 
+                                               type="text" 
+                                               name="tags" 
+                                               id="tags"
+                                               value="<%= todo.tags ? todo.tags.join(', ') : '' %>" 
+                                               placeholder="Enter tags separated by commas">
+                                        <small class="form-text text-muted">e.g., urgent, project, meeting</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <div class="d-flex align-items-center">
+                                    <span class="font-weight-bold mr-3"><%= t('status') %>:</span>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" 
+                                               type="radio" 
+                                               name="completed" 
+                                               id="incomplete" 
+                                               value="false"
+                                               <%= !todo.completed ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="incomplete">
+                                            <i class="fa fa-circle-o text-warning"></i> <%= t('incomplete') %>
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" 
+                                               type="radio" 
+                                               name="completed" 
+                                               id="completed" 
+                                               value="true"
+                                               <%= todo.completed ? 'checked' : '' %>>
+                                        <label class="form-check-label" for="completed">
+                                            <i class="fa fa-check-circle text-success"></i> <%= t('completed') %>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fa fa-save"></i> <%= t('updateTask') %>
+                                </button>
+                                <a href="/?lang=<%= lang %>" class="btn btn-secondary btn-lg btn-cancel">
+                                    <i class="fa fa-times"></i> <%= t('cancel') %>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="//code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="//stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <% if (lang === 'fa') { %>
+    <script src="//cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
+    <% } %>
+    
+    <script>
+        // Form validation
+        document.getElementById('editTaskForm').addEventListener('submit', function(e) {
+            const taskInput = this.querySelector('input[name="task"]');
+            if (!taskInput.value.trim()) {
+                e.preventDefault();
+                taskInput.focus();
+                alert('Please enter a task title');
+            }
+        });
+        
+        // Auto-focus on task input
+        document.getElementById('task').focus();
+
+        // Init Jalali datepicker (fa)
+        <% if (lang === 'fa') { %>
+        $(function(){
+            var $d = $('#dueDate');
+            if ($d.length) {
+                $d.pDatepicker({
+                    format: 'YYYY/MM/DD',
+                    autoClose: true,
+                    initialValue: <%= todo.dueDate ? 'true' : 'false' %>
+                });
+                $('.date-trigger').on('click', function(){
+                    $d.pDatepicker('show');
+                });
+            }
+        });
+        <% } %>
+        <% if (lang !== 'fa') { %>
+        document.querySelectorAll('.date-trigger').forEach(function(el){
+            el.addEventListener('click', function(){
+                var inp = document.getElementById('dueDate');
+                if (inp) { inp.showPicker ? inp.showPicker() : inp.focus(); }
+            });
+        });
+        <% } %>
+    </script>
+</body>
+
+</html>

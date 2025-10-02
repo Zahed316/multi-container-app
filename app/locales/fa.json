@@ -1,0 +1,59 @@
+{
+  "title": "برنامه کارها",
+  "addTaskPlaceholder": "افزودن کار جدید",
+  "descriptionPlaceholder": "توضیحات (اختیاری)",
+  "priorityLow": "اولویت کم",
+  "priorityMedium": "اولویت متوسط",
+  "priorityHigh": "اولویت زیاد",
+  "categoryPlaceholder": "دسته‌بندی",
+  "dueDate": "تاریخ سررسید",
+  "due": "سررسید",
+  "tagsPlaceholder": "برچسب‌ها (با ویرگول جدا کنید)",
+  "addTaskButton": "افزودن کار",
+  "yourTasks": "کارهای شما",
+  "selectAll": "انتخاب همه",
+  "selectNone": "لغو انتخاب",
+  "completeSelected": "تکمیل انتخاب‌شده‌ها",
+  "markPending": "علامت به درحال انجام",
+  "deleteSelected": "حذف انتخاب‌شده‌ها",
+  "completed": "تکمیل شد",
+  "priorityLabel_high": "زیاد",
+  "priorityLabel_medium": "متوسط",
+  "priorityLabel_low": "کم",
+  "created": "ایجاد شده",
+  "updated": "به‌روز شده",
+  "confirmDelete": "آیا از حذف این کار مطمئن هستید؟",
+  "enterTask": "لطفاً عنوان کار را وارد کنید",
+  "selectAtLeastOne": "لطفاً حداقل یک کار را انتخاب کنید",
+  "confirmComplete": "آیا کار(های) انتخابی کامل شوند؟",
+  "confirmPending": "آیا کار(های) انتخابی درحال انجام شوند؟",
+  "confirmBulkDelete": "حذف کار(های) انتخابی؟ این عمل قابل بازگشت نیست.",
+  "editTask": "ویرایش کار",
+  "backToTasks": "بازگشت به کارها",
+  "taskLabel": "عنوان کار",
+  "descriptionLabel": "توضیحات",
+  "priority": "اولویت",
+  "category": "دسته‌بندی",
+  "tags": "برچسب‌ها",
+  "status": "وضعیت",
+  "incomplete": "ناقص",
+  "updateTask": "به‌روزرسانی کار",
+  "cancel": "انصراف"
+  ,"search": "جست‌وجو"
+  ,"searchPlaceholder": "جست‌وجو در عنوان، توضیحات و برچسب‌ها"
+  ,"filterPriority": "اولویت"
+  ,"allPriorities": "همه اولویت‌ها"
+  ,"filterCategory": "دسته‌بندی"
+  ,"allCategories": "همه دسته‌بندی‌ها"
+  ,"filterStatus": "وضعیت"
+  ,"allTasks": "همه کارها"
+  ,"pending": "درحال انجام"
+  ,"filterSortBy": "مرتب‌سازی"
+  ,"newestFirst": "جدیدترین ابتدا"
+  ,"az": "الف-ی"
+  ,"emptyStateTitle": "هیچ کاری وجود ندارد"
+  ,"emptyStateSubtitle": "برای شروع، کار جدیدی در بالا اضافه کنید!"
+  ,"failedToLoad": "خطا در بارگذاری کارها"
+}
+
+

@@ -12,10 +12,19 @@ services:
   todo-app:
     build:
       context: ./app
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     depends_on:
-      - todo-database
+      todo-database:
+        condition: service_healthy
     environment:
       NODE_ENV: production
+      # Pass Mongo connection string; app falls back to this host if unset
+      MONGO_URI: mongodb://todo-database:27017/todoapp
     ports:
       - 3000:3000
       - 35729:35729
@@ -29,10 +38,16 @@ services:
 
   todo-database:
     image: mongo:6
-    #volumes: 
-    #  - database:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes: 
+      - database:/data/db
     ports:
       - 27017:27017
 
-#volumes:
-  #database:
+volumes:
+  database:

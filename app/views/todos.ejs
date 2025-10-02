@@ -1,79 +1,422 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= lang %>">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Todo App</title>
+    <title><%= t('title') %></title>
     <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <% if (lang === 'fa') { %>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css">
+    <% } %>
+    <style>
+        .priority-high { border-left: 4px solid #dc3545; }
+        .priority-medium { border-left: 4px solid #ffc107; }
+        .priority-low { border-left: 4px solid #28a745; }
+        .completed { text-decoration: line-through; opacity: 0.6; }
+        .todo-item { transition: all 0.3s ease; }
+        .todo-item:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .alert { margin: 10px 0; }
+        .badge { font-size: 0.8em; }
+        .form-control:focus { border-color: #007bff; box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); }
+    </style>
 </head>
 
-<body>
+<body dir="<%= dir %>">
     <div class="container m-5 p-2 rounded mx-auto bg-light shadow">
         
         <!-- App title section -->
         <div class="row m-1 p-4">
             <div class="col">
                 <div class="p-1 h1 text-primary text-center mx-auto display-inline-block">
-                    <u>Todo App</u>
+                    <u><%= t('title') %></u>
                 </div>
             </div>
         </div>
+
+        <!-- Alert Messages -->
+        <% if (error) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <%= t(error) %>
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+        <% } %>
+        
+        <% if (success) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <%= t(success) %>
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+        <% } %>
+
+        <!-- Language Switcher -->
+        <div class="row m-1 p-0">
+            <div class="col-12 text-right">
+                <a class="btn btn-sm <%= lang==='en' ? 'btn-primary' : 'btn-outline-primary' %>" href="/?lang=en">EN</a>
+                <a class="btn btn-sm <%= lang==='fa' ? 'btn-primary' : 'btn-outline-primary' %>" href="/?lang=fa">FA</a>
+            </div>
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="row m-1 p-3">
+            <div class="col-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <form method="GET" action="/" id="filterForm">
+                            <div class="row">
+                                <div class="col-md-3 mb-2 <%= lang==='fa' ? 'text-right' : '' %>">
+                                    <label for="filter-search" class="font-weight-bold"><%= t('search') %></label>
+                                    <input id="filter-search" type="text" class="form-control" name="search" 
+                                           value="<%= filters.search %>" 
+                                           placeholder="<%= t('searchPlaceholder') %>">
+                                </div>
+                                <div class="col-md-2 mb-2 <%= lang==='fa' ? 'text-right' : '' %>">
+                                    <label for="filter-priority" class="font-weight-bold"><%= t('filterPriority') %></label>
+                                    <select id="filter-priority" class="form-control" name="priority">
+                                        <option value="all" <%= filters.priority === 'all' ? 'selected' : '' %>><%= t('allPriorities') %></option>
+                                        <option value="high" <%= filters.priority === 'high' ? 'selected' : '' %>>High</option>
+                                        <option value="medium" <%= filters.priority === 'medium' ? 'selected' : '' %>>Medium</option>
+                                        <option value="low" <%= filters.priority === 'low' ? 'selected' : '' %>>Low</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 mb-2 <%= lang==='fa' ? 'text-right' : '' %>">
+                                    <label for="filter-category" class="font-weight-bold"><%= t('filterCategory') %></label>
+                                    <select id="filter-category" class="form-control" name="category">
+                                        <option value="all" <%= filters.category === 'all' ? 'selected' : '' %>><%= t('allCategories') %></option>
+                                        <% categories.forEach(cat => { %>
+                                            <option value="<%= cat %>" <%= filters.category === cat ? 'selected' : '' %>><%= cat %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 mb-2 <%= lang==='fa' ? 'text-right' : '' %>">
+                                    <label for="filter-status" class="font-weight-bold"><%= t('filterStatus') %></label>
+                                    <select id="filter-status" class="form-control" name="status">
+                                        <option value="all" <%= filters.status === 'all' ? 'selected' : '' %>><%= t('allTasks') %></option>
+                                        <option value="pending" <%= filters.status === 'pending' ? 'selected' : '' %>><%= t('pending') %></option>
+                                        <option value="completed" <%= filters.status === 'completed' ? 'selected' : '' %>><%= t('completed') %></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 mb-2 <%= lang==='fa' ? 'text-right' : '' %>">
+                                    <label for="filter-sort" class="font-weight-bold"><%= t('filterSortBy') %></label>
+                                    <select id="filter-sort" class="form-control" name="sortBy">
+                                        <option value="newest" <%= filters.sortBy === 'newest' ? 'selected' : '' %>><%= t('newestFirst') %></option>
+                                        <option value="priority" <%= filters.sortBy === 'priority' ? 'selected' : '' %>><%= t('filterPriority') %></option>
+                                        <option value="dueDate" <%= filters.sortBy === 'dueDate' ? 'selected' : '' %>><%= t('dueDate') %></option>
+                                        <option value="alphabetical" <%= filters.sortBy === 'alphabetical' ? 'selected' : '' %>><%= t('az') %></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-1 mb-2 d-flex align-items-end">
+                                    <input type="hidden" name="lang" value="<%= lang %>">
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fa fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
             <div class="row m-1 p-3">
                 <div class="col col-11 mx-auto">
-                    <form method="POST" action="/" autocomplete="off">
+                <!-- Enhanced Add Task Form -->
+                <form method="POST" action="/?lang=<%= lang %>" autocomplete="off" id="addTaskForm">
                         <div class="row m-1 p-3">
                             <div class="col col-11 mx-auto">
-                                <div class="row bg-white rounded shadow-sm p-2 add-todo-wrapper align-items-center justify-content-center">
-                                    <div class="col">
-                                        <input class="form-control form-control-lg border-0 add-todo-input bg-transparent rounded" type="text" name="task" placeholder="Add new Task">
+                            <div class="row bg-white rounded shadow-sm p-3 add-todo-wrapper">
+                                <div class="col-12 mb-3">
+                                    <input class="form-control form-control-lg border-0 add-todo-input bg-transparent rounded" 
+                                           type="text" name="task" placeholder="<%= t('addTaskPlaceholder') %>" required>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <input class="form-control" type="text" name="description" placeholder="<%= t('descriptionPlaceholder') %>">
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <select class="form-control" name="priority">
+                                        <option value="low"><%= t('priorityLow') %></option>
+                                        <option value="medium" selected><%= t('priorityMedium') %></option>
+                                        <option value="high"><%= t('priorityHigh') %></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <input class="form-control" type="text" name="category" placeholder="<%= t('categoryPlaceholder') %>">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="font-weight-bold <%= lang==='fa' ? 'float-right' : '' %>"><%= t('dueDate') %></label>
+                                    <div class="input-group">
+                                        <% if (lang !== 'fa') { %>
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text date-trigger" title="<%= t('dueDate') %>"><i class="fa fa-calendar"></i></span>
+                                            </div>
+                                        <% } %>
+                                        <input class="form-control" type="<%= lang==='fa' ? 'text' : 'date' %>" name="dueDate" id="dueDateAdd" aria-label="<%= t('dueDate') %>">
+                                        <% if (lang === 'fa') { %>
+                                            <div class="input-group-append">
+                                                <span class="input-group-text date-trigger" title="<%= t('dueDate') %>"><i class="fa fa-calendar"></i></span>
+                                            </div>
+                                        <% } %>
                                     </div>
-                                    <div class="col-auto px-0 mx-0 mr-2">
-                                        <button type="submit" class="btn btn-primary">Add</button>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <input class="form-control" type="text" name="tags" placeholder="<%= t('tagsPlaceholder') %>">
+                                    </div>
+                                <div class="col-12 text-center">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="fa fa-plus"></i> <%= t('addTaskButton') %>
+                                    </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </form>
+                
                     <hr>
+                
+                <!-- Todo List -->
                     <div class="row">
                         <div class="col-12">
-                            <% if(Object.keys(tasks).length> 0) { %>
-                                <ul class="nav flex-column">
-                                    <% tasks.forEach(todo=> { %>
-                                        <li class="nav-item">
-                                            <div class="d-flex justify-content-between py-1">
-                                                <div class="d-flex flex-row">
-                                                    <div>
-                                                        <%= todo.task %>
-                                                            <p class="text-muted"><small>
-                                                                    <%= moment(todo.created_at).fromNow() %>
-                                                                </small></p>
+                        <% if (tasks && tasks.length > 0) { %>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <h5><%= t('yourTasks') %> (<%= tasks.length %>)</h5>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll()">
+                                            <i class="fa fa-check-square-o"></i> <%= t('selectAll') %>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectNone()">
+                                            <i class="fa fa-square-o"></i> <%= t('selectNone') %>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-success" onclick="bulkAction('complete')">
+                                            <i class="fa fa-check"></i> <%= t('completeSelected') %>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="bulkAction('incomplete')">
+                                            <i class="fa fa-times"></i> <%= t('markPending') %>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="bulkAction('delete')">
+                                            <i class="fa fa-trash"></i> <%= t('deleteSelected') %>
+                                        </button>
+                                    </div>
                                                     </div>
                                                 </div>
-                                                <a href="javascript:;" onclick="this.children[0].submit()"
-                                                    class="text-danger">
-                                                    <form method="POST" action="/todo/destroy">
-                                                        <input type="hidden" name="_key" value="<%= todo._id %>" />
+                            <div class="row">
+                                <% tasks.forEach(todo => { %>
+                                    <div class="col-12 mb-3">
+                                        <div class="card todo-item priority-<%= todo.priority %> <%= todo.completed ? 'completed' : '' %>">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div class="flex-grow-1">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <div class="form-check mr-2">
+                                                                <input class="form-check-input task-checkbox" type="checkbox" 
+                                                                       value="<%= todo._id %>" id="task-<%= todo._id %>">
+                                                                <label class="form-check-label" for="task-<%= todo._id %>"></label>
+                                                            </div>
+                                                            <form method="POST" action="/todo/toggle?lang=<%= lang %>" class="mr-2">
+                                                                <input type="hidden" name="_id" value="<%= todo._id %>">
+                                                                <button type="submit" class="btn btn-sm <%= todo.completed ? 'btn-success' : 'btn-outline-success' %>">
+                                                                    <i class="fa fa-<%= todo.completed ? 'check' : 'circle-o' %>"></i>
+                                                                </button>
                                                     </form>
-                                                    <i class="fa fa-trash-o"></i>
-                                                </a>
+                                                            <h6 class="mb-0 <%= todo.completed ? 'text-muted' : '' %>">
+                                                                <%= todo.task %>
+                                                                <% if (todo.completed) { %>
+                                                                    <span class="badge badge-success ml-2"><%= t('completed') %></span>
+                                                                <% } %>
+                                                            </h6>
+                                                        </div>
+                                                        
+                                                        <% if (todo.description) { %>
+                                                            <p class="text-muted mb-2"><%= todo.description %></p>
+                                                        <% } %>
+                                                        
+                                                        <div class="d-flex flex-wrap align-items-center">
+                                                            <span class="badge badge-<%= todo.priority === 'high' ? 'danger' : todo.priority === 'medium' ? 'warning' : 'success' %> mr-2">
+                                                                <%= t('priorityLabel_' + todo.priority) %>
+                                                            </span>
+                                                            
+                                                            <% if (todo.category) { %>
+                                                                <span class="badge badge-info mr-2">
+                                                                    <i class="fa fa-folder"></i> <%= todo.category %>
+                                                                </span>
+                                                            <% } %>
+                                                            
+                                                            <% if (todo.dueDate) { %>
+                                                                 <span class="badge badge-secondary mr-2">
+                                                                     <i class="fa fa-calendar"></i> <%= t('due') %>: <%= formatDate(todo.dueDate) %>
+                                                                 </span>
+                                                            <% } %>
+                                                            
+                                                            <% if (todo.tags && todo.tags.length > 0) { %>
+                                                                <% todo.tags.forEach(tag => { %>
+                                                                    <span class="badge badge-light mr-1">#<%= tag %></span>
+                                                                <% }) %>
+                                                            <% } %>
+                                                        </div>
+                                                        
+                                                        <small class="text-muted">
+                                                             <i class="fa fa-clock-o"></i> <%= t('created') %> <%= fromNow(todo.created_at) %>
+                                                            <% if (todo.updated_at && todo.updated_at.getTime() !== todo.created_at.getTime()) { %>
+                                                                 • <%= t('updated') %> <%= fromNow(todo.updated_at) %>
+                                                            <% } %>
+                                                        </small>
+                                                    </div>
+                                                    
+                                                    <div class="btn-group ml-3">
+                                                        <a href="/todo/edit/<%= todo._id %>?lang=<%= lang %>" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fa fa-edit"></i>
+                                                        </a>
+                                                        <form method="POST" action="/todo/destroy?lang=<%= lang %>" class="d-inline">
+                                                            <input type="hidden" name="_key" value="<%= todo._id %>">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                                    onclick="return confirm('<%= t('confirmDelete') %>')">
+                                                                <i class="fa fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </li>
+                                        </div>
+                                            </div>
                                         <% }) %>
-                                </ul>
+                            </div>
                                 <% } else { %>
-                                    <div class="text-center"><strong>Please add some task.</strong></div>
-                                    <% }%>
+                            <div class="text-center py-5">
+                                <i class="fa fa-tasks fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted"><%= t('emptyStateTitle') %></h5>
+                                <p class="text-muted"><%= t('emptyStateSubtitle') %></p>
+                            </div>
+                        <% } %>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="//code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="//stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <% if (lang === 'fa') { %>
+    <script src="//cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
+    <% } %>
+    
+    <script>
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut();
+        }, 5000);
+        
+        // Form validation
+        document.getElementById('addTaskForm').addEventListener('submit', function(e) {
+            const taskInput = this.querySelector('input[name="task"]');
+            if (!taskInput.value.trim()) {
+                e.preventDefault();
+                taskInput.focus();
+                alert('<%= t('enterTask') %>');
+            }
+        });
+        
+        // Bulk operations
+        function selectAll() {
+            document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        }
+        
+        function selectNone() {
+            document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
+        
+        function bulkAction(action) {
+            const selectedTasks = Array.from(document.querySelectorAll('.task-checkbox:checked'))
+                .map(checkbox => checkbox.value);
+            
+            if (selectedTasks.length === 0) {
+                alert('<%= t('selectAtLeastOne') %>');
+                return;
+            }
+            
+            let confirmMessage = '';
+            switch (action) {
+                case 'complete':
+                    confirmMessage = `${selectedTasks.length} - <%= t('confirmComplete') %>`;
+                    break;
+                case 'incomplete':
+                    confirmMessage = `${selectedTasks.length} - <%= t('confirmPending') %>`;
+                    break;
+                case 'delete':
+                    confirmMessage = `${selectedTasks.length} - <%= t('confirmBulkDelete') %>`;
+                    break;
+            }
+            
+            if (confirm(confirmMessage)) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/todo/bulk';
+                
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = action;
+                form.appendChild(actionInput);
+                
+                selectedTasks.forEach(taskId => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'taskIds';
+                    input.value = taskId;
+                    form.appendChild(input);
+                });
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
+        // Auto-submit filter form on change
+        document.getElementById('filterForm').addEventListener('change', function() {
+            this.submit();
+        });
+
+        // Init Jalali datepicker (fa)
+        <% if (lang === 'fa') { %>
+        $(function(){
+            var $d = $('#dueDateAdd');
+            if ($d.length) {
+                $d.pDatepicker({
+                    format: 'YYYY/MM/DD',
+                    autoClose: true,
+                    initialValue: false,
+                    toolbox: { calendarSwitch: { enabled: false } }
+                });
+                $('.date-trigger').on('click', function(){
+                    $d.pDatepicker('show');
+                });
+            }
+        });
+        <% } %>
+        <% if (lang !== 'fa') { %>
+        document.querySelectorAll('.date-trigger').forEach(function(el){
+            el.addEventListener('click', function(){
+                var inp = document.getElementById('dueDateAdd');
+                if (inp) { inp.showPicker ? inp.showPicker() : inp.focus(); }
+            });
+        });
+        <% } %>
+    </script>
 </body>
 
 </html>
